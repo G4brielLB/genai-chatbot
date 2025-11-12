@@ -7,6 +7,7 @@ from app.core.database import engine, Base
 from app.models.user import User
 from app.models.conversation import Conversation
 from app.models.message import Message
+from app.routers import auth
 
 # Criar tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
@@ -22,11 +23,14 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:8000"],
+    allow_credentials=True,  # Necessário para cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Incluir routers
+
+app.include_router(auth.router)
 
 
 @app.get("/")
