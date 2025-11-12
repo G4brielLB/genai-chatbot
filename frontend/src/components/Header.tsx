@@ -1,15 +1,32 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Header: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isHomePage = location.pathname === '/';
 
   return (
     <header className={`h-14 border-b ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'} 
       flex items-center justify-between px-4 sticky top-0 z-20`}>
-      <div className="flex-1"></div>
+      {/* Logo/Home Button */}
+      <div className="flex-1">
+        {!isHomePage && (
+          <button
+            onClick={() => navigate('/')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors font-semibold
+              ${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
+          >
+            <span className="text-xl">🤖</span>
+            <span className="hidden sm:inline">VG GenAI Bot</span>
+          </button>
+        )}
+      </div>
       
       <div className="flex items-center gap-3">
         {/* Theme Toggle */}
@@ -25,13 +42,10 @@ export const Header: React.FC = () => {
         {/* User Profile */}
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
           ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 
-            flex items-center justify-center text-white font-semibold">
-            {user?.name.charAt(0).toUpperCase() || 'U'}
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold
+            ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-300 text-gray-700'} uppercase`}>
+            {user?.email.charAt(0) || 'U'}
           </div>
-          <span className="text-sm font-medium hidden sm:inline">
-            {user?.name || 'Usuário'}
-          </span>
         </div>
       </div>
     </header>

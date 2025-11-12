@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface User {
   email: string;
-  name: string;
 }
 
 interface AuthContextType {
@@ -23,7 +22,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     // Simulate API call (replace with actual backend call)
     // TODO: Integrate with FastAPI backend
-    const mockUser = { email, name: email.split('@')[0] };
+    const mockUser = { email };
     setUser(mockUser);
     localStorage.setItem('user', JSON.stringify(mockUser));
     localStorage.setItem('token', 'mock-jwt-token'); // Replace with real JWT

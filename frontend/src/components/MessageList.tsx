@@ -80,8 +80,8 @@ export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
             </div>
 
             {message.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 
-                flex-shrink-0 flex items-center justify-center text-white font-semibold">
+              <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold
+                ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-300 text-gray-700'} uppercase`}>
                 U
               </div>
             )}
