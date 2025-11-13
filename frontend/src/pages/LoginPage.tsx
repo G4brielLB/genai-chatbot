@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { extractErrorMessage } from '../utils/errorHandler';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -21,7 +22,8 @@ export const LoginPage: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError('Erro ao fazer login. Verifique suas credenciais.');
+      const errorMessage = extractErrorMessage(err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -44,7 +46,7 @@ export const LoginPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-500 text-sm">
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-500 text-sm whitespace-pre-line">
               {error}
             </div>
           )}
@@ -116,10 +118,6 @@ export const LoginPage: React.FC = () => {
           >
             Criar conta
           </Link>
-        </div>
-
-        <div className={`mt-4 text-center text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          <p>💡 Demo: Use qualquer email e senha</p>
         </div>
       </div>
     </div>

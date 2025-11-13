@@ -3,7 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -14,8 +18,21 @@ export const Header: React.FC = () => {
   return (
     <header className={`h-14 border-b ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'} 
       flex items-center justify-between px-4 sticky top-0 z-20`}>
-      {/* Logo/Home Button */}
-      <div className="flex-1">
+      {/* Left section: Menu button + Logo/Home */}
+      <div className="flex items-center gap-2 flex-1">
+        {/* Menu Toggle Button (Mobile) */}
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className={`lg:hidden p-2 rounded-lg transition-colors
+              ${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
+            title="Abrir menu"
+          >
+            <span className="text-xl">☰</span>
+          </button>
+        )}
+        
+        {/* Logo/Home Button */}
         {!isHomePage && (
           <button
             onClick={() => navigate('/')}

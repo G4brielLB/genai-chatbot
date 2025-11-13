@@ -2,17 +2,17 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-interface ProtectedRouteProps {
+interface GuestRouteProps {
   children: React.ReactNode;
 }
 
 /**
- * Componente que protege rotas que devem ser acessadas apenas por usuários autenticados
- * (ex: Home, Chat)
+ * Componente que protege rotas que devem ser acessadas apenas por usuários NÃO autenticados
+ * (ex: Login, Register)
  * 
- * Se o usuário NÃO estiver autenticado, redireciona para a página de login
+ * Se o usuário estiver autenticado, redireciona para a página inicial
  */
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+export const GuestRoute: React.FC<GuestRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   // Mostrar loading enquanto verifica autenticação
@@ -27,9 +27,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // Se está autenticado, redireciona para home
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
 
+  // Se não está autenticado, permite acesso
   return <>{children}</>;
 };
