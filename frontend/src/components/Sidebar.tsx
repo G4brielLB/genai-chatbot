@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { conversations, createConversation, deleteConversation, currentConversationId } = useChat();
   const { isDark } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
 
   const handleNewChat = () => {
     const id = createConversation();
     navigate(`/chat/${id}`);
+    onClose(); // Fecha o sidebar no mobile após criar novo chat
   };
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
@@ -29,14 +34,6 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-800 dark:bg-gray-700 text-white"
-      >
-        {isOpen ? '✕' : '☰'}
-      </button>
-
       {/* Sidebar */}
       <div
         className={`${
@@ -45,13 +42,26 @@ export const Sidebar: React.FC = () => {
         ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} 
         border-r ${isDark ? 'border-gray-700' : 'border-gray-200'} flex flex-col`}
       >
+        {/* Header with close button (Mobile) */}
+        <div className={`lg:hidden flex items-center justify-between p-3 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <h2 className="font-semibold text-lg">Menu</h2>
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-lg transition-colors
+              ${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
+            title="Fechar menu"
+          >
+            <span className="text-xl">✕</span>
+          </button>
+        </div>
+
         {/* New Chat Button */}
-        <div className="p-3 border-b border-gray-700">
+        <div className={`p-3 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <button
             onClick={handleNewChat}
             className={`w-full py-3 px-4 rounded-lg font-medium transition-colors
               ${isDark 
-                ? 'bg-gray-800 hover:bg-gray-700 text-white' 
+                ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-700' 
                 : 'bg-white hover:bg-gray-100 text-gray-900 border border-gray-300'
               }`}
           >
@@ -70,6 +80,7 @@ export const Sidebar: React.FC = () => {
               <Link
                 key={conv.id}
                 to={`/chat/${conv.id}`}
+                onClick={onClose}
                 className={`group flex items-center justify-between p-3 mb-1 rounded-lg transition-colors
                   ${currentConversationId === conv.id
                     ? isDark ? 'bg-gray-800' : 'bg-gray-200'
@@ -114,7 +125,7 @@ export const Sidebar: React.FC = () => {
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
         />
       )}
     </>

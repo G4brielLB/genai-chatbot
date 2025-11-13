@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useRegister } from '../hooks/useRegister';
+import { extractErrorMessage } from '../utils/errorHandler';
 
 export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { register, loading } = useRegister();
   const navigate = useNavigate();
   const { isDark } = useTheme();
 
@@ -22,22 +24,15 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
-      return;
-    }
-
-    setLoading(true);
-
     try {
-      // Simulate API call (replace with actual backend call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Criar conta
+      await register({ email, password });
+      // Fazer login automaticamente após criar conta
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError('Erro ao criar conta. Tente novamente.');
-    } finally {
-      setLoading(false);
+      const errorMessage = extractErrorMessage(err);
+      setError(errorMessage);
     }
   };
 
@@ -58,7 +53,7 @@ export const RegisterPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-500 text-sm">
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-500 text-sm whitespace-pre-line">
               {error}
             </div>
           )}
@@ -105,6 +100,9 @@ export const RegisterPage: React.FC = () => {
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
                 }`}
             />
+            <p className={`mt-1.5 text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              Mínimo 8 caracteres, 1 número, 1 maiúscula e 1 caractere especial (!@#$%&*)
+            </p>
           </div>
 
           <div>
