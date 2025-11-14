@@ -9,8 +9,6 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
   },
-  CHAT: {
-    CONVERSATIONS: '/conversations',
-    MESSAGES: '/messages',
-  },
+  CONVERSATIONS: '/conversations',
+  CHAT: '/chat',
 } as const;

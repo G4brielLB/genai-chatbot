@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext';
 import { MessageList } from '../components/MessageList';
@@ -7,25 +7,68 @@ import { MessageInput } from '../components/MessageInput';
 export const ChatPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { conversations, sendMessage, createConversation } = useChat();
+  const { 
+    conversations, 
+    sendMessage, 
+    setCurrentConversationId,
+    loadConversationMessages,
+    isLoading 
+  } = useChat();
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
-  const conversation = conversations.find(conv => conv.id === id);
+  const conversationId = id ? parseInt(id) : null;
+  const conversation = conversations.find(conv => conv.id === conversationId);
 
   useEffect(() => {
-    // If no conversation exists, create a new one
     if (!id) {
-      const newId = createConversation();
-      navigate(`/chat/${newId}`, { replace: true });
+      // Sem ID = nova conversa, aguardando primeira mensagem
+      setCurrentConversationId(null);
+      return;
     }
-  }, [id, createConversation, navigate]);
 
-  const handleSendMessage = (content: string) => {
-    if (id) {
-      sendMessage(id, content);
+    const convId = parseInt(id);
+    setCurrentConversationId(convId);
+
+    // Carregar mensagens se a conversa existir mas não tiver mensagens carregadas
+    const loadMessages = async () => {
+      const existingConv = conversations.find(c => c.id === convId);
+      if (existingConv && (!existingConv.messages || existingConv.messages.length === 0)) {
+        try {
+          setIsLoadingMessages(true);
+          await loadConversationMessages(convId);
+        } catch (error) {
+          console.error('Erro ao carregar mensagens:', error);
+        } finally {
+          setIsLoadingMessages(false);
+        }
+      }
+    };
+
+    loadMessages();
+  }, [id, navigate, setCurrentConversationId, loadConversationMessages, conversations]);
+
+  const handleSendMessage = async (content: string) => {
+    // sendMessage agora cria a conversa automaticamente se não existir
+    const newConvId = await sendMessage(content, conversationId || undefined);
+    
+    // Se foi criada uma nova conversa, navegar para ela
+    if (!conversationId && newConvId) {
+      navigate(`/chat/${newConvId}`, { replace: true });
     }
   };
 
-  if (!conversation && id) {
+  if (isLoadingMessages) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <h2 className="text-2xl font-semibold mb-2">Carregando mensagens...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (conversationId && !conversation && !isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -46,7 +89,10 @@ export const ChatPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full">
       <MessageList messages={conversation?.messages || []} />
-      <MessageInput onSend={handleSendMessage} />
+      <MessageInput 
+        onSend={handleSendMessage} 
+        disabled={isLoading}
+      />
     </div>
   );
 };

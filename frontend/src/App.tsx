@@ -42,6 +42,7 @@ function App() {
                 }
               >
                 <Route index element={<HomePage />} />
+                <Route path="chat" element={<ChatPage />} />
                 <Route path="chat/:id" element={<ChatPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

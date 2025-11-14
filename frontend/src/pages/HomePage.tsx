@@ -1,16 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useChat } from '../contexts/ChatContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { createConversation } = useChat();
   const { isDark } = useTheme();
 
   const handleStartChat = () => {
-    const id = createConversation();
-    navigate(`/chat/${id}`);
+    // Redireciona para /chat sem ID - conversa será criada ao enviar primeira mensagem
+    navigate('/chat');
   };
 
   return (
