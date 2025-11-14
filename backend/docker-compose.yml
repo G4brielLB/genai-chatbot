@@ -16,9 +16,5 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - .:/app
-      - sqlite_data:/app/data
+      - ./data:/app/data
     restart: unless-stopped
-
-volumes:
-  sqlite_data:
-    driver: local

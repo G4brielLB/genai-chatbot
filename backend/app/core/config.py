@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     
     # Google Gemini - API_KEY deve vir obrigatoriamente do .env
     google_api_key: str  # OBRIGATÓRIO no .env
+    qtd_tokens_default: int = 8192  # Opcional (tem padrão)
     
     class Config:
         env_file = str(BASE_DIR / ".env")

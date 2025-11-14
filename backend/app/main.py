@@ -7,7 +7,7 @@ from app.core.database import engine, Base
 from app.models.user import User
 from app.models.conversation import Conversation
 from app.models.message import Message
-from app.routers import auth
+from app.routers import auth, conversations, chat
 
 # Criar tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
@@ -29,8 +29,9 @@ app.add_middleware(
 )
 
 # Incluir routers
-
 app.include_router(auth.router)
+app.include_router(conversations.router)
+app.include_router(chat.router)
 
 
 @app.get("/")
@@ -41,8 +42,3 @@ def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
-
-@app.get("/health")
-def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
