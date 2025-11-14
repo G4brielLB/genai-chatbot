@@ -10,26 +10,36 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { conversations, createConversation, deleteConversation, currentConversationId } = useChat();
+  const { 
+    conversations, 
+    deleteConversation, 
+    currentConversationId,
+    setCurrentConversationId 
+  } = useChat();
   const { isDark } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleNewChat = () => {
-    const id = createConversation();
-    navigate(`/chat/${id}`);
-    onClose(); // Fecha o sidebar no mobile após criar novo chat
+    // Navega para /chat sem ID - conversa será criada ao enviar primeira mensagem
+    navigate('/chat');
+    onClose();
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (confirm('Tem certeza que deseja excluir esta conversa?')) {
-      deleteConversation(id);
+      await deleteConversation(id);
       if (currentConversationId === id) {
         navigate('/');
       }
     }
+  };
+
+  const handleConversationClick = (id: number) => {
+    setCurrentConversationId(id);
+    onClose();
   };
 
   return (
@@ -80,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <Link
                 key={conv.id}
                 to={`/chat/${conv.id}`}
-                onClick={onClose}
+                onClick={() => handleConversationClick(typeof conv.id === 'number' ? conv.id : parseInt(conv.id.toString()))}
                 className={`group flex items-center justify-between p-3 mb-1 rounded-lg transition-colors
                   ${currentConversationId === conv.id
                     ? isDark ? 'bg-gray-800' : 'bg-gray-200'
@@ -89,18 +99,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               >
                 <div className="flex-1 truncate">
                   <div className="text-sm truncate">{conv.title}</div>
-                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {conv.messages.length} mensagens
-                  </div>
                 </div>
-                <button
-                  onClick={(e) => handleDelete(conv.id, e)}
-                  className={`opacity-0 group-hover:opacity-100 ml-2 p-1 rounded transition-opacity
-                    ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-300'}`}
-                  title="Excluir conversa"
-                >
-                  🗑️
-                </button>
+                {typeof conv.id === 'number' && (
+                  <button
+                    onClick={(e) => handleDelete(conv.id as number, e)}
+                    className={`opacity-0 group-hover:opacity-100 ml-2 p-1 rounded transition-opacity
+                      ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-300'}`}
+                    title="Excluir conversa"
+                  >
+                    🗑️
+                  </button>
+                )}
               </Link>
             ))
           )}

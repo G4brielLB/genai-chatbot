@@ -117,8 +117,21 @@ function translateFieldName(field: string): string {
     password: 'Senha',
     name: 'Nome',
     confirmPassword: 'Confirmação de senha',
+    message: 'Mensagem',
+    conversation_id: 'Conversa',
+    title: 'Título',
     // Adicione mais conforme necessário
   };
 
   return translations[field] || field.charAt(0).toUpperCase() + field.slice(1);
+}
+
+/**
+ * Função principal para lidar com erros
+ * Exibe o erro no console e retorna a mensagem formatada
+ */
+export function handleError(error: unknown): string {
+  const message = extractErrorMessage(error);
+  console.error('Error:', message);
+  return message;
 }
