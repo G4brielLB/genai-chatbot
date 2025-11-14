@@ -286,23 +286,305 @@ axios.interceptors.response.use(
 
 ---
 
-## 🚀 Endpoints Futuros (Em Desenvolvimento)
+## 💬 Conversas
 
-### Conversas
-- `GET /conversations` - Listar conversas do usuário
-- `POST /conversations` - Criar nova conversa
-- `GET /conversations/{id}` - Buscar conversa específica
-- `DELETE /conversations/{id}` - Deletar conversa
+Todos os endpoints de conversas requerem autenticação (cookie HttpOnly).
 
-### Chat
-- `POST /chat` - Enviar mensagem e receber resposta do Gemini
-- `GET /conversations/{id}/messages` - Listar mensagens de uma conversa
+### **GET** `/conversations`
+Lista todas as conversas do usuário autenticado.
+
+**Query Parameters:**
+- `skip` (opcional): Quantidade de registros para pular (paginação). Padrão: 0
+- `limit` (opcional): Limite de registros a retornar. Padrão: 100, Máximo: 100
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 1,
+    "user_id": 123,
+    "title": "Dúvidas sobre IA Generativa",
+    "created_at": "2025-11-14T10:30:00.000Z"
+  },
+  {
+    "id": 2,
+    "user_id": 123,
+    "title": "Ajuda com Python",
+    "created_at": "2025-11-14T11:45:00.000Z"
+  }
+]
+```
+
+**Exemplo de uso no Frontend:**
+```javascript
+// Fetch API
+const response = await fetch('http://localhost:8000/conversations?skip=0&limit=20', {
+  credentials: 'include'
+});
+const conversations = await response.json();
+
+// Axios
+const response = await axios.get(
+  'http://localhost:8000/conversations',
+  { 
+    withCredentials: true,
+    params: { skip: 0, limit: 20 }
+  }
+);
+```
 
 ---
 
-## 📞 Suporte
+### **POST** `/conversations`
+Cria uma nova conversa para o usuário autenticado.
 
-Para dúvidas ou problemas, consulte:
-- Documentação interativa: http://localhost:8000/docs
-- Logs do container: `docker-compose logs -f app`
-- Health check: http://localhost:8000/health
+**Request Body:**
+```json
+{
+  "title": "Dúvidas sobre IA Generativa"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "id": 1,
+  "user_id": 123,
+  "title": "Dúvidas sobre IA Generativa",
+  "created_at": "2025-11-14T10:30:00.000Z"
+}
+```
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Usuário não autenticado
+- `500 Internal Server Error`: Erro ao criar conversa
+
+**Exemplo de uso no Frontend:**
+```javascript
+// Fetch API
+const response = await fetch('http://localhost:8000/conversations', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({ title: 'Dúvidas sobre IA Generativa' })
+});
+
+// Axios
+const response = await axios.post(
+  'http://localhost:8000/conversations',
+  { title: 'Dúvidas sobre IA Generativa' },
+  { withCredentials: true }
+);
+```
+
+---
+
+### **GET** `/conversations/{conversation_id}`
+Busca uma conversa específica com todas as suas mensagens.
+
+**Path Parameters:**
+- `conversation_id`: ID da conversa
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "user_id": 123,
+  "title": "Dúvidas sobre IA Generativa",
+  "created_at": "2025-11-14T10:30:00.000Z",
+  "messages": [
+    {
+      "id": 1,
+      "conversation_id": 1,
+      "role": "user",
+      "content": "o que é ia generativa?",
+      "created_at": "2025-11-14T10:31:00.000Z"
+    },
+    {
+      "id": 2,
+      "conversation_id": 1,
+      "role": "assistant",
+      "content": "IA Generativa é uma categoria de inteligência artificial...",
+      "created_at": "2025-11-14T10:31:05.000Z"
+    }
+  ]
+}
+```
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Usuário não autenticado
+- `404 Not Found`: Conversa não encontrada ou não pertence ao usuário
+
+**Exemplo de uso no Frontend:**
+```javascript
+// Fetch API
+const response = await fetch('http://localhost:8000/conversations/1', {
+  credentials: 'include'
+});
+const conversation = await response.json();
+
+// Axios
+const response = await axios.get(
+  'http://localhost:8000/conversations/1',
+  { withCredentials: true }
+);
+```
+
+---
+
+### **DELETE** `/conversations/{conversation_id}`
+Deleta uma conversa e todas as suas mensagens (cascata).
+
+**Path Parameters:**
+- `conversation_id`: ID da conversa
+
+**Response (204 No Content):**
+Sem corpo de resposta.
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Usuário não autenticado
+- `404 Not Found`: Conversa não encontrada ou não pertence ao usuário
+- `500 Internal Server Error`: Erro ao deletar conversa
+
+**Exemplo de uso no Frontend:**
+```javascript
+// Fetch API
+await fetch('http://localhost:8000/conversations/1', {
+  method: 'DELETE',
+  credentials: 'include'
+});
+
+// Axios
+await axios.delete(
+  'http://localhost:8000/conversations/1',
+  { withCredentials: true }
+);
+```
+
+---
+
+## 🤖 Chat (Integração com Google Gemini)
+
+### **POST** `/chat`
+Envia uma mensagem em uma conversa e recebe a resposta do assistente (Google Gemini via LangChain).
+
+**Request Body:**
+```json
+{
+  "conversation_id": 1,
+  "message": "o que é ia generativa?"
+}
+```
+
+**Fluxo do Sistema:**
+1. Verifica se a conversa pertence ao usuário autenticado
+2. Valida se há tokens disponíveis (limite: 8192 tokens por conversa)
+3. Busca o histórico de mensagens da conversa
+4. Adiciona um system prompt invisível (define comportamento do chatbot)
+5. Envia o contexto completo para o Google Gemini
+6. Salva ambas as mensagens (usuário e assistente) no banco
+7. Atualiza a contagem de tokens da conversa
+
+**Response (200 OK):**
+```json
+{
+  "user_message": {
+    "id": 1,
+    "conversation_id": 1,
+    "role": "user",
+    "content": "o que é ia generativa?",
+    "created_at": "2025-11-14T10:31:00.000Z"
+  },
+  "assistant_message": {
+    "id": 2,
+    "conversation_id": 1,
+    "role": "assistant",
+    "content": "IA Generativa é uma categoria de inteligência artificial que cria conteúdo novo e original...",
+    "created_at": "2025-11-14T10:31:05.000Z"
+  }
+}
+```
+
+**Erros Possíveis:**
+- `401 Unauthorized`: Usuário não autenticado
+- `404 Not Found`: Conversa não encontrada ou não pertence ao usuário
+- `429 Too Many Requests`: Limite de tokens atingido para esta conversa
+  ```json
+  {
+    "detail": "Limite de tokens atingido para esta conversa. Tokens usados: 8500/8192. Crie uma nova conversa para continuar."
+  }
+  ```
+- `500 Internal Server Error`: Erro ao processar mensagem ou comunicação com Gemini
+
+**Exemplo de uso no Frontend:**
+```javascript
+// Fetch API
+const response = await fetch('http://localhost:8000/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({
+    conversation_id: 1,
+    message: 'o que é ia generativa?'
+  })
+});
+
+const data = await response.json();
+console.log('Usuário:', data.user_message.content);
+console.log('Assistente:', data.assistant_message.content);
+
+// Axios
+const response = await axios.post(
+  'http://localhost:8000/chat',
+  {
+    conversation_id: 1,
+    message: 'o que é ia generativa?'
+  },
+  { withCredentials: true }
+);
+```
+
+**Tratamento de Erro 429 (Limite de Tokens):**
+```javascript
+try {
+  const response = await axios.post(
+    'http://localhost:8000/chat',
+    { conversation_id: 1, message: 'nova mensagem' },
+    { withCredentials: true }
+  );
+} catch (error) {
+  if (error.response?.status === 429) {
+    alert('Limite de tokens atingido! Crie uma nova conversa.');
+    // Redirecionar para criar nova conversa
+  }
+}
+```
+
+---
+
+## 📊 Sistema de Tokens
+
+### Como Funciona
+- **Limite por conversa**: 8192 tokens (configurável via `QTD_TOKENS_DEFAULT` no `.env`)
+- **Contagem**: Usa `tiktoken` (cl100k_base) para contagem precisa
+- **Acumulação**: Soma de todas as mensagens (usuário + assistente) na conversa
+- **System Prompt**: Também consome tokens, mas é reutilizado a cada chamada
+
+### O que acontece quando o limite é atingido?
+- O endpoint `/chat` retorna erro **429 Too Many Requests**
+- O usuário deve criar uma **nova conversa** para continuar
+- Conversas antigas permanecem acessíveis para leitura
+
+### Exemplo de Cálculo
+```
+Conversa com 3 interações:
+- Mensagem 1 (usuário):    150 tokens
+- Resposta 1 (assistente): 300 tokens
+- Mensagem 2 (usuário):    100 tokens
+- Resposta 2 (assistente): 250 tokens
+- Mensagem 3 (usuário):    120 tokens
+- Resposta 3 (assistente): 280 tokens
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total: 1200 tokens
+Restante: 6992 tokens (8192 - 1200)
+```
