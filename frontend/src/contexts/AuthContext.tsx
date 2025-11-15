@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await apiService.login({ email, password });
+    await apiService.login({ email, password });
     // Buscar dados completos do usuário
     const userData = await apiService.getCurrentUser();
     setUser(userData);
