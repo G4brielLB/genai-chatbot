@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, type ReactNode, useCallback, useEffect } from 'react';
 import { apiService } from '../services/api.service';
 import type { Conversation, Message } from '../types/api';
 import { useAuth } from './AuthContext';
@@ -189,10 +189,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Se não há conversationId, criar nova conversa
       if (!activeConversationId) {
         const title = content.slice(0, 15);
-        activeConversationId = await createConversationInternal(title);
-        if (!activeConversationId) {
+        const newConvId = await createConversationInternal(title);
+        if (!newConvId) {
           return null;
         }
+        activeConversationId = newConvId;
         isNewConversation = true;
       }
 
