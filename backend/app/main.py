@@ -22,11 +22,7 @@ app = FastAPI(
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Desenvolvimento local
-        "http://localhost",  # Nginx local
-        "http://44.200.87.239",  # EC2 via Nginx
-    ],
+    allow_origins=["*"],  # Temporário para demo
     allow_credentials=True,  # Necessário para cookies
     allow_methods=["*"],
     allow_headers=["*"],
